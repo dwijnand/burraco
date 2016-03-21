@@ -1,0 +1,3 @@
+package burraco
+
+object T
