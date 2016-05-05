@@ -17,6 +17,7 @@ triggeredMessage := Watched.clearWhenTriggered
 
 scalacOptions ++= "-encoding utf8"
 scalacOptions ++= "-deprecation -feature -unchecked -Xlint"
+scalacOptions  += "-language:experimental.macros"
 scalacOptions  += "-language:higherKinds"
 scalacOptions  += "-language:implicitConversions"
 scalacOptions  += "-language:postfixOps"
@@ -46,8 +47,13 @@ wartremoverWarnings  -= Wart.Any                    // bans f-interpolator #158
 wartremoverWarnings  -= Wart.DefaultArguments
 wartremoverWarnings  -= Wart.NonUnitStatements      // bans this.type #118
 wartremoverWarnings  -= Wart.Product
+wartremoverWarnings  -= Wart.Return                 // testing
 wartremoverWarnings  -= Wart.Serializable
 wartremoverWarnings  -= Wart.Throw
+
+libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
+
+initialCommands in console += "\nimport burraco._"
 
              fork in Test := false
       logBuffered in Test := false
