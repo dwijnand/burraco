@@ -26,19 +26,17 @@ final case object King  extends Rank
 final case object Ace   extends Rank
 final case object Deuce extends Rank
 
-// TODO: toString
 sealed abstract class Card {
   // TODO: Decide if the definition of Wildcard is this or if it's dependant on the Model
   def isWildcard: Boolean = this == Joker || this.rank == Some(Deuce)
 }
 final case object Joker extends Card
 final case class RegularCard(rank: Rank, suit: Suit) extends Card {
-//override def toString = "Card(" + rank.toString + " of " + suit + ")"
   override def toString = rank.toString + " of " + suit
 }
 
-object Card extends ((Rank, Suit) => Card) {
-  def apply(rank: Rank, suit: Suit): Card = RegularCard(rank, suit)
+object Card extends ((Rank, Suit) => RegularCard) {
+  def apply(rank: Rank, suit: Suit): RegularCard = RegularCard(rank, suit)
 
   implicit class CardOps(private val c: Card) extends AnyVal {
     def rank: Option[Rank] = c match {
@@ -133,10 +131,11 @@ final class RankToCardMacros(val c: Context) extends StringToSuitMacroFn {
 // TODO: toString
 sealed trait Meld extends Any {
   def cards: Vector[Card]
+  override def toString = cards mkString ("[ ", ", ", " ]")
 }
 
 final class Group private (val cards: Vector[Card]) extends AnyVal with Meld {
-  override def toString = "Group(" + cards.toString + ")"
+  override def toString = cards mkString ("[ ", ", ", " ]")
 }
 
 object Group {
@@ -151,7 +150,9 @@ object Group {
   }
 }
 
-//final class Run   private (val cards: Vector[Card]) extends AnyVal with Meld
+//final class Run private(val cards: Vector[Card]) extends AnyVal with Meld {
+//  override def toString = cards mkString ("[ ", ", ", " ]")
+//}
 
 //object Run {
 //  def fromVector(cards: Vector[Card]): Option[Run] = {

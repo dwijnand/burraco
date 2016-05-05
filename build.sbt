@@ -46,8 +46,9 @@ wartremoverWarnings  += Wart.ToString
 wartremoverWarnings  -= Wart.Any                    // bans f-interpolator #158
 wartremoverWarnings  -= Wart.DefaultArguments
 wartremoverWarnings  -= Wart.NonUnitStatements      // bans this.type #118
+wartremoverWarnings  -= Wart.Null                   // breaks for macros?
 wartremoverWarnings  -= Wart.Product
-wartremoverWarnings  -= Wart.Return                 // testing
+wartremoverWarnings  -= Wart.Return
 wartremoverWarnings  -= Wart.Serializable
 wartremoverWarnings  -= Wart.Throw
 
