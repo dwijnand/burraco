@@ -3,14 +3,19 @@ package burraco
 import scala.reflect.macros.blackbox.Context
 
 sealed trait Suit
-final case object Clubs    extends Suit
-final case object Diamonds extends Suit
-final case object Hearts   extends Suit
-final case object Spades   extends Suit
+final case object Clubs    extends Suit { override def toString = "\u2663" }
+final case object Diamonds extends Suit { override def toString = "\u2666" }
+final case object Hearts   extends Suit { override def toString = "\u2665" }
+final case object Spades   extends Suit { override def toString = "\u2660" }
 
-sealed trait Rank { override def toString: String }
-// TODO: Values or types? eg. Rank(2), Rank(13)..
+object Suit {
+  def values = Vector(Clubs, Diamonds, Hearts, Spades)
+}
+
+sealed trait Rank
 object Rank {
+  def values = Vector(Ace, Deuce, _3, _4, _5, _6, _7, _8, _9, _10, Jack, Queen, King)
+
   final case object _3  extends Rank { override def toString = "3" }
   final case object _4  extends Rank { override def toString = "4" }
   final case object _5  extends Rank { override def toString = "5" }
@@ -20,23 +25,25 @@ object Rank {
   final case object _9  extends Rank { override def toString = "9" }
   final case object _10 extends Rank { override def toString = "10" }
 }
-final case object Jack  extends Rank
-final case object Queen extends Rank
-final case object King  extends Rank
-final case object Ace   extends Rank
-final case object Deuce extends Rank
+final case object Jack  extends Rank { override def toString = "J" }
+final case object Queen extends Rank { override def toString = "Q" }
+final case object King  extends Rank { override def toString = "K" }
+final case object Ace   extends Rank { override def toString = "A" }
+final case object Deuce extends Rank { override def toString = "2" }
 
 sealed abstract class Card {
   // TODO: Decide if the definition of Wildcard is this or if it's dependant on the Model
   def isWildcard: Boolean = this == Joker || this.rank == Some(Deuce)
 }
-final case object Joker extends Card
+final case object Joker extends Card { override def toString = "\u2605" }
 final case class RegularCard(rank: Rank, suit: Suit) extends Card {
-  override def toString = rank.toString + " of " + suit
+  override def toString = rank.toString + suit
 }
 
 object Card extends ((Rank, Suit) => RegularCard) {
   def apply(rank: Rank, suit: Suit): RegularCard = RegularCard(rank, suit)
+
+  def values: Vector[Card] = (for { s <- Suit.values; r <- Rank.values } yield Card(r, s)) :+ Joker
 
   implicit class CardOps(private val c: Card) extends AnyVal {
     def rank: Option[Rank] = c match {
@@ -53,6 +60,20 @@ object Card extends ((Rank, Suit) => RegularCard) {
 
 final class IntToRank(private val i: Int) extends AnyVal {
   def rank: Rank = macro IntToRankMacros.rankImpl
+}
+
+final class RankToCard(private val rank: Rank) extends AnyVal {
+  def    clubs: RegularCard = macro RankToCardMacros.rankToCardImpl
+  def diamonds: RegularCard = macro RankToCardMacros.rankToCardImpl
+  def   hearts: RegularCard = macro RankToCardMacros.rankToCardImpl
+  def   spades: RegularCard = macro RankToCardMacros.rankToCardImpl
+}
+
+final class IntToCard(private val i: Int) extends AnyVal {
+  def    clubs: RegularCard = macro IntToCardMacros.intToCardImpl
+  def diamonds: RegularCard = macro IntToCardMacros.intToCardImpl
+  def   hearts: RegularCard = macro IntToCardMacros.intToCardImpl
+  def   spades: RegularCard = macro IntToCardMacros.intToCardImpl
 }
 
 trait IntToRankMacroFn {
@@ -76,14 +97,6 @@ trait IntToRankMacroFn {
   }
 }
 
-final class IntToRankMacros(val c: Context) extends IntToRankMacroFn {
-  import c.universe._
-
-  def rankImpl: Tree = c.prefix.tree match {
-    case Apply(_, Seq(Literal(Constant(x)))) => intToRank(x)
-  }
-}
-
 trait StringToSuitMacroFn {
   val c: Context
   import c.universe._
@@ -96,27 +109,12 @@ trait StringToSuitMacroFn {
   }
 }
 
-final class IntToCard(private val i: Int) extends AnyVal {
-  def    clubs: RegularCard = macro IntToCardMacros.intToCardImpl
-  def diamonds: RegularCard = macro IntToCardMacros.intToCardImpl
-  def   hearts: RegularCard = macro IntToCardMacros.intToCardImpl
-  def   spades: RegularCard = macro IntToCardMacros.intToCardImpl
-}
-
-final class IntToCardMacros(val c: Context) extends IntToRankMacroFn with StringToSuitMacroFn {
+final class IntToRankMacros(val c: Context) extends IntToRankMacroFn {
   import c.universe._
 
-  def intToCardImpl: Tree = c.macroApplication match {
-    case Select(Apply(_, Seq(Literal(Constant(x)))), TermName(suitStr)) =>
-      q"_root_.burraco.RegularCard(${intToRank(x)}, ${stringToSuit(suitStr)})"
+  def rankImpl: Tree = c.prefix.tree match {
+    case Apply(_, Seq(Literal(Constant(x)))) => intToRank(x)
   }
-}
-
-final class RankToCard(private val rank: Rank) extends AnyVal {
-  def    clubs: RegularCard = macro RankToCardMacros.rankToCardImpl
-  def diamonds: RegularCard = macro RankToCardMacros.rankToCardImpl
-  def   hearts: RegularCard = macro RankToCardMacros.rankToCardImpl
-  def   spades: RegularCard = macro RankToCardMacros.rankToCardImpl
 }
 
 final class RankToCardMacros(val c: Context) extends StringToSuitMacroFn {
@@ -128,7 +126,15 @@ final class RankToCardMacros(val c: Context) extends StringToSuitMacroFn {
   }
 }
 
-// TODO: toString
+final class IntToCardMacros(val c: Context) extends IntToRankMacroFn with StringToSuitMacroFn {
+  import c.universe._
+
+  def intToCardImpl: Tree = c.macroApplication match {
+    case Select(Apply(_, Seq(Literal(Constant(x)))), TermName(suitStr)) =>
+      q"_root_.burraco.RegularCard(${intToRank(x)}, ${stringToSuit(suitStr)})"
+  }
+}
+
 sealed trait Meld extends Any {
   def cards: Vector[Card]
   override def toString = cards mkString ("[ ", ", ", " ]")
@@ -150,18 +156,18 @@ object Group {
   }
 }
 
-//final class Run private(val cards: Vector[Card]) extends AnyVal with Meld {
-//  override def toString = cards mkString ("[ ", ", ", " ]")
-//}
+final class Run private(val cards: Vector[Card]) extends AnyVal with Meld {
+  override def toString = cards mkString ("[ ", ", ", " ]")
+}
 
-//object Run {
-//  def fromVector(cards: Vector[Card]): Option[Run] = {
-//    // At least 3 cards
-//    // Up to 1 Wildcard per Meld
-//    // Ordered from greatest to lowest
-//    ???
-//  }
-//}
+object Run {
+  def fromVector(cards: Vector[Card]): Option[Run] = {
+    // At least 3 cards
+    // Up to 1 Wildcard per Meld
+    // Ordered from greatest to lowest
+    ???
+  }
+}
 
 final case class Player()
 
