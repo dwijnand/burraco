@@ -34,25 +34,20 @@ sealed abstract class Card {
   def isWildcard: Boolean = this == Joker || (this.rank contains Deuce)
 }
 final case object Joker extends Card { override def toString = "\u2605" }
-final case class RegularCard(rank: Rank, suit: Suit) extends Card {
-  override def toString = rank.toString + suit
-}
+final case class RegularCard(rank: Rank, suit: Suit) extends Card { override def toString = "" + rank + suit }
 
 object Card extends ((Rank, Suit) => RegularCard) {
   def apply(rank: Rank, suit: Suit): RegularCard = RegularCard(rank, suit)
+  def unapply(c: Card): Option[(Rank, Suit)] = c match {
+    case Joker                   => None
+    case RegularCard(rank, suit) => Some((rank, suit))
+  }
 
   def values: Vector[Card] = (for { s <- Suit.values; r <- Rank.values } yield Card(r, s)) :+ Joker
 
   implicit class CardOps(private val c: Card) extends AnyVal {
-    def rank: Option[Rank] = c match {
-      case Joker                => None
-      case RegularCard(rank, _) => Some(rank)
-    }
-
-    def suit: Option[Suit] = c match {
-      case Joker                => None
-      case RegularCard(_, suit) => Some(suit)
-    }
+    def rank: Option[Rank] = Card unapply c map (_._1)
+    def suit: Option[Suit] = Card unapply c map (_._2)
   }
 }
 
