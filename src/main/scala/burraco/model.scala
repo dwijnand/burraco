@@ -1,7 +1,5 @@
 package burraco
 
-import scala.reflect.macros.blackbox.Context
-
 sealed trait Suit
 final case object Clubs    extends Suit { override def toString = "\u2663" }
 final case object Diamonds extends Suit { override def toString = "\u2666" }
@@ -33,7 +31,7 @@ final case object Deuce extends Rank { override def toString = "2" }
 
 sealed abstract class Card {
   // TODO: Decide if the definition of Wildcard is this or if it's dependant on the Model
-  def isWildcard: Boolean = this == Joker || this.rank == Some(Deuce)
+  def isWildcard: Boolean = this == Joker || (this.rank contains Deuce)
 }
 final case object Joker extends Card { override def toString = "\u2605" }
 final case class RegularCard(rank: Rank, suit: Suit) extends Card {
@@ -55,83 +53,6 @@ object Card extends ((Rank, Suit) => RegularCard) {
       case Joker                => None
       case RegularCard(_, suit) => Some(suit)
     }
-  }
-}
-
-final class IntToRank(private val i: Int) extends AnyVal {
-  def rank: Rank = macro IntToRankMacros.rankImpl
-}
-
-final class RankToCard(private val rank: Rank) extends AnyVal {
-  def    clubs: RegularCard = macro RankToCardMacros.rankToCardImpl
-  def diamonds: RegularCard = macro RankToCardMacros.rankToCardImpl
-  def   hearts: RegularCard = macro RankToCardMacros.rankToCardImpl
-  def   spades: RegularCard = macro RankToCardMacros.rankToCardImpl
-}
-
-final class IntToCard(private val i: Int) extends AnyVal {
-  def    clubs: RegularCard = macro IntToCardMacros.intToCardImpl
-  def diamonds: RegularCard = macro IntToCardMacros.intToCardImpl
-  def   hearts: RegularCard = macro IntToCardMacros.intToCardImpl
-  def   spades: RegularCard = macro IntToCardMacros.intToCardImpl
-}
-
-trait IntToRankMacroFn {
-  val c: Context
-  import c.universe._
-
-  def intToRank(x: Any): Tree = x match {
-    case 1  => q"_root_.burraco.Ace"
-    case 2  => q"_root_.burraco.Deuce"
-    case 3  => q"_root_.burraco.Rank._3"
-    case 4  => q"_root_.burraco.Rank._4"
-    case 5  => q"_root_.burraco.Rank._5"
-    case 6  => q"_root_.burraco.Rank._6"
-    case 7  => q"_root_.burraco.Rank._7"
-    case 8  => q"_root_.burraco.Rank._8"
-    case 9  => q"_root_.burraco.Rank._9"
-    case 10 => q"_root_.burraco.Rank._10"
-    case 11 => q"_root_.burraco.Jack"
-    case 12 => q"_root_.burraco.Queen"
-    case 13 => q"_root_.burraco.King"
-  }
-}
-
-trait StringToSuitMacroFn {
-  val c: Context
-  import c.universe._
-
-  def stringToSuit(s: String): Tree = s match {
-    case "clubs"    => q"_root_.burraco.Clubs"
-    case "diamonds" => q"_root_.burraco.Diamonds"
-    case "hearts"   => q"_root_.burraco.Hearts"
-    case "spades"   => q"_root_.burraco.Spades"
-  }
-}
-
-final class IntToRankMacros(val c: Context) extends IntToRankMacroFn {
-  import c.universe._
-
-  def rankImpl: Tree = c.prefix.tree match {
-    case Apply(_, Seq(Literal(Constant(x)))) => intToRank(x)
-  }
-}
-
-final class RankToCardMacros(val c: Context) extends StringToSuitMacroFn {
-  import c.universe._
-
-  def rankToCardImpl: Tree = c.macroApplication match {
-    case Select(Apply(_, Seq(rank)), TermName(suitStr)) =>
-      q"_root_.burraco.RegularCard($rank, ${stringToSuit(suitStr)})"
-  }
-}
-
-final class IntToCardMacros(val c: Context) extends IntToRankMacroFn with StringToSuitMacroFn {
-  import c.universe._
-
-  def intToCardImpl: Tree = c.macroApplication match {
-    case Select(Apply(_, Seq(Literal(Constant(x)))), TermName(suitStr)) =>
-      q"_root_.burraco.RegularCard(${intToRank(x)}, ${stringToSuit(suitStr)})"
   }
 }
 

@@ -39,7 +39,6 @@ wartremoverWarnings  += Wart.ExplicitImplicitTypes
 wartremoverWarnings  += Wart.FinalCaseClass
 wartremoverWarnings  += Wart.JavaConversions
 wartremoverWarnings  += Wart.MutableDataStructures
-wartremoverWarnings  += Wart.NoNeedForMonad
 wartremoverWarnings  += Wart.Nothing
 wartremoverWarnings  += Wart.Option2Iterable
 wartremoverWarnings  += Wart.ToString
