@@ -5,7 +5,6 @@ import scala.collection.immutable
 import sbt._
 import sbt.Keys._
 
-
 object SbtMisc {
   val noDocs    = Def.settings(sources in (Compile, doc) := Nil, publishArtifact in (Compile, packageDoc) := false)
   val noPackage = Def.settings(Keys.`package` := file(""), packageBin := file(""), packagedArtifacts := Map())

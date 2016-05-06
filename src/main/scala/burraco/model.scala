@@ -56,9 +56,7 @@ sealed trait Meld extends Any {
   override def toString = cards mkString ("[ ", ", ", " ]")
 }
 
-final class Group private (val cards: Vector[Card]) extends AnyVal with Meld {
-  override def toString = cards mkString ("[ ", ", ", " ]")
-}
+final class Group private (val cards: Vector[Card]) extends AnyVal with Meld
 
 object Group {
   def fromVector(cards: Vector[Card]): Option[Group] = {
@@ -72,14 +70,17 @@ object Group {
   }
 }
 
-final class Run private(val cards: Vector[Card]) extends AnyVal with Meld {
-  override def toString = cards mkString ("[ ", ", ", " ]")
-}
+final class Run private(val cards: Vector[Card]) extends AnyVal with Meld
 
 object Run {
   def fromVector(cards: Vector[Card]): Option[Run] = {
-    // At least 3 cards
-    // Up to 1 Wildcard per Meld
+    if (cards.size < 3) return None
+
+    val (wildcards, nonWildCards) = cards partition (_.isWildcard)
+
+    if (wildcards.size > 1) return None
+
+    // Contains cards in sequential order, with optional Joker
     // Ordered from greatest to lowest
     ???
   }

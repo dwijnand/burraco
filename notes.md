@@ -58,6 +58,8 @@ Melds of 7+ Cards earn extra points for the team, 1 of 2 ways:
    shown by the last Card placed face up across the others in a horizontal position
    every Group with a Wildcard with always be Dirty
 
+TODO: Can a Deuce come after an King-Ace Run?
+
 ## Various rules
 
 Book-end Wildcards are placed at the bottom of a Meld
